@@ -8,9 +8,14 @@
  */
 
 //* Private Include ************************************************************************
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+#pragma GCC diagnostic ignored "-Wredundant-decls"
+#include <glibmm/main.h>
 #include <gtkmm/box.h>
 #include <gtkmm/label.h>
 #include <spdlog/spdlog.h>
+#pragma GCC diagnostic pop
 
 #include "MainWindow.hpp"
 //* Private Constants **********************************************************************
@@ -40,12 +45,19 @@ CMainWindow::CMainWindow() :
 
     m_ScrolledWindow.add(m_TextView);
 
-    m_ConnectButton.set_vexpand(true);
-    m_ConnectButton.set_hexpand(true);
-    m_AbortButton.set_vexpand(true);
+    m_AbortButton.set_vexpand(false);
+    m_ConnectButton.set_vexpand(false);
+    m_isConnected.set_vexpand(false);
+    m_Progressbar.set_vexpand(true);
+    m_TextView.set_vexpand(false);
+
     m_AbortButton.set_hexpand(true);
-    m_isConnected.set_vexpand(true);
+    m_ConnectButton.set_hexpand(true);
     m_isConnected.set_hexpand(true);
+    m_Progressbar.set_hexpand(true);
+    m_TextView.set_hexpand(true);
+
+//    m_Progressbar.set_text("Progress bar");
 
     m_ConnectButton.signal_clicked().connect(sigc::mem_fun(*this,
                                                            &CMainWindow::connectButton_clicked));
@@ -53,10 +65,35 @@ CMainWindow::CMainWindow() :
     m_AbortButton.signal_clicked().connect(sigc::mem_fun(*this,
                                                          &CMainWindow::abortButton_clicked));
 
-    m_MainGrid.add(m_ScrolledWindow);
-    m_MainGrid.add(m_ConnectButton);
+    auto timeout =
+        Glib::signal_timeout().connect(sigc::mem_fun(*this,
+                                                     &CMainWindow::updateProgressbar),
+                                       PROGRESS_UPDATE_TIME_ms);
+
+    m_MainGrid.attach(m_ConnectButton,
+                      0,
+                      0,
+                      400);
     m_MainGrid.add(m_AbortButton);
     m_MainGrid.add(m_isConnected);
+    m_MainGrid.attach(m_ScrolledWindow,
+                      1,
+                      1,
+                      1000);
+    m_MainGrid.attach(m_Progressbar,
+                      1,
+                      2,
+                      1000,
+                      250);
+    m_MainGrid.attach(m_PulseBar,
+                      1,
+                      3,
+                      1000,
+                      300);
+    m_Progressbar.set_halign(Gtk::ALIGN_CENTER);
+    m_Progressbar.set_valign(Gtk::ALIGN_CENTER);
+    m_PulseBar.set_halign(Gtk::ALIGN_CENTER);
+    m_PulseBar.set_valign(Gtk::ALIGN_CENTER);
 
     show_all_children();
 }
@@ -73,19 +110,19 @@ CMainWindow::~CMainWindow()
 //+-----------------------------------------------------------------------------------------
 void CMainWindow::connectButton_clicked(void)
 {
-    spdlog::info("Connect button clicked");
-
     if (true
         == m_isConnected.get_active())
     {
         m_ConnectButton.set_label("Connect");
-        m_refTextBuffer->set_text("Connect clicked");
+        m_refTextBuffer->set_text("Disconnect clicked");
+        spdlog::info("Disconnect button clicked");
         m_isConnected.set_active(false);
         return;
     }
 
+    spdlog::info("Connect button clicked");
+    m_refTextBuffer->set_text("Connect clicked");
     m_ConnectButton.set_label("Disconnect");
-    m_refTextBuffer->set_text("Disconnect clicked");
     m_isConnected.set_active(true);
 
     m_TextView.set_buffer(m_refTextBuffer);
@@ -100,4 +137,40 @@ void CMainWindow::abortButton_clicked(void)
 {
     spdlog::info("Aborting...");
     hide();
+}
+
+//+-------------------------------------------------------------------------------- Method -
+//|Author               : nandanv
+//|Created On           : 04-Apr-2021, 12:07:28 AM
+//|Description          : <see declaration>
+//+-----------------------------------------------------------------------------------------
+bool CMainWindow::updateProgressbar(void)
+{
+    static double dProgress = 0;
+    static uint16_t uiCounter = 0;
+    static const uint16_t PULSE_PRESCALE_COUNTER = 7;
+    static const uint8_t PROGRESS_BAR_PRECISION = 2;
+
+    if (uiCounter++
+        > PULSE_PRESCALE_COUNTER)
+    {
+        uiCounter = 0;
+        m_PulseBar.pulse();
+    }
+
+    if (dProgress
+        > 1)
+    {
+        return true;
+    }
+
+    dProgress += (double)PROGRESS_UPDATE_FRACTION;
+
+    m_Progressbar.set_fraction(dProgress);
+
+    spdlog::trace("Updating progress bar: {:.{}f}%",
+                  dProgress
+                  * 100,
+                  PROGRESS_BAR_PRECISION);
+    return true;
 }

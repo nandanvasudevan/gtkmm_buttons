@@ -8,6 +8,9 @@
  */
 
 //* Private Include ************************************************************************
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+#pragma GCC diagnostic ignored "-Wredundant-decls"
 #include <fmt/core.h>
 #include <fmt/color.h>
 #include <fmt/format.h>
@@ -15,6 +18,7 @@
 #include <spdlog/spdlog.h>
 #include <spdlog/cfg/env.h> // support for loading levels from the environment variable
 #include <spdlog/sinks/daily_file_sink.h>
+#pragma GCC diagnostic pop
 
 #include "MainWindow.hpp"
 //* Private Constants **********************************************************************
@@ -53,10 +57,11 @@ void spdLog_init(void)
     auto consoleLogger = std::make_shared <
         spdlog::sinks::ansicolor_stdout_sink_mt>();
 
+    // Roll over every day at 23:59:00
     auto fileSink =
         std::make_shared <spdlog::sinks::daily_file_sink_mt>("logs/daily.txt",
-                                                             2,
-                                                             30);
+                                                             23,
+                                                             59);
 
     spdlog::logger logger("log",
                               {
