@@ -1,0 +1,6 @@
+Debug/
+Release/
+logs/
+*.out
+*.gch
+
