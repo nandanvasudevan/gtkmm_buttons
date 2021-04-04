@@ -29,7 +29,8 @@
 
 //* Public Types ***************************************************************************
 
-class CMainWindow : public Gtk::Window
+class CMainWindow:
+    public Gtk::Window
 {
 public:
     CMainWindow();
@@ -72,12 +73,15 @@ private:
 
     Gtk::TextView m_TextView;
 
-    Glib::RefPtr<Gtk::TextBuffer> m_refTextBuffer;
+    Glib::RefPtr <Gtk::TextBuffer> m_refTextBuffer;
 
 //******************************************************************************************
 //                                   Member functions
 //******************************************************************************************
+    //! Attach widgets to main grid
     void attachWidgets(void);
+
+    //!Connect all the necessary signals
     void connectSignals(void);
 };
 
