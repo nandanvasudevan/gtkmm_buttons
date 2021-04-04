@@ -20,6 +20,7 @@
 #include <gtkmm/textview.h>
 #include <gtkmm/progressbar.h>
 #include <gtkmm/scrolledwindow.h>
+#include <gtkmm/spinner.h>
 #include <gtkmm/window.h>
 #pragma GCC diagnostic pop
 //* Public Constants ***********************************************************************
@@ -39,8 +40,8 @@ protected:
     void abortButton_clicked(void);
 
 private:
-    const float PROGRESS_UPDATE_FRACTION = 0.001f;
-    const uint16_t PROGRESS_UPDATE_TIME_ms = 10;
+    constexpr static float PROGRESS_UPDATE_FRACTION = 0.001f;
+    constexpr static uint16_t PROGRESS_UPDATE_TIME_ms = 10;
 
     Gtk::Button m_ConnectButton;
     Gtk::Button m_AbortButton;
@@ -53,6 +54,8 @@ private:
     Gtk::ProgressBar m_PulseBar;
 
     Gtk::ScrolledWindow m_ScrolledWindow;
+
+    Gtk::Spinner m_spinner;
 
     Gtk::TextView m_TextView;
 

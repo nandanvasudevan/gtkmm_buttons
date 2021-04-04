@@ -8,6 +8,8 @@
  */
 
 //* Private Include ************************************************************************
+#define SPDLOG_COMPILED_LIB
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wsign-conversion"
 #pragma GCC diagnostic ignored "-Wredundant-decls"
@@ -48,7 +50,7 @@ CMainWindow::CMainWindow() :
     m_AbortButton.set_vexpand(false);
     m_ConnectButton.set_vexpand(false);
     m_isConnected.set_vexpand(false);
-    m_Progressbar.set_vexpand(true);
+    m_Progressbar.set_vexpand(false);
     m_TextView.set_vexpand(false);
 
     m_AbortButton.set_hexpand(true);
@@ -56,8 +58,6 @@ CMainWindow::CMainWindow() :
     m_isConnected.set_hexpand(true);
     m_Progressbar.set_hexpand(true);
     m_TextView.set_hexpand(true);
-
-//    m_Progressbar.set_text("Progress bar");
 
     m_ConnectButton.signal_clicked().connect(sigc::mem_fun(*this,
                                                            &CMainWindow::connectButton_clicked));
@@ -90,6 +90,12 @@ CMainWindow::CMainWindow() :
                       3,
                       1000,
                       300);
+    m_MainGrid.attach(m_spinner,
+                      1,
+                      4,
+                      500,
+                      500);
+
     m_Progressbar.set_halign(Gtk::ALIGN_CENTER);
     m_Progressbar.set_valign(Gtk::ALIGN_CENTER);
     m_PulseBar.set_halign(Gtk::ALIGN_CENTER);
@@ -113,18 +119,20 @@ void CMainWindow::connectButton_clicked(void)
     if (true
         == m_isConnected.get_active())
     {
+        m_spinner.stop();
         m_ConnectButton.set_label("Connect");
         m_refTextBuffer->set_text("Disconnect clicked");
         spdlog::info("Disconnect button clicked");
         m_isConnected.set_active(false);
+        m_TextView.set_buffer(m_refTextBuffer);
         return;
     }
 
+    m_spinner.start();
     spdlog::info("Connect button clicked");
     m_refTextBuffer->set_text("Connect clicked");
     m_ConnectButton.set_label("Disconnect");
     m_isConnected.set_active(true);
-
     m_TextView.set_buffer(m_refTextBuffer);
 }
 
@@ -148,8 +156,8 @@ bool CMainWindow::updateProgressbar(void)
 {
     static double dProgress = 0;
     static uint16_t uiCounter = 0;
-    static const uint16_t PULSE_PRESCALE_COUNTER = 7;
-    static const uint8_t PROGRESS_BAR_PRECISION = 2;
+    static constexpr uint16_t PULSE_PRESCALE_COUNTER = 7;
+    static constexpr uint8_t PROGRESS_BAR_PRECISION = 2;
 
     if (uiCounter++
         > PULSE_PRESCALE_COUNTER)
@@ -160,6 +168,12 @@ bool CMainWindow::updateProgressbar(void)
 
     if (dProgress
         > 1)
+    {
+        return true;
+    }
+
+    if (false
+        == m_isConnected.get_active())
     {
         return true;
     }

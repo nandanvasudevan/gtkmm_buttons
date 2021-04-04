@@ -36,6 +36,10 @@ int main(int, char*[])
 {
     spdLog_init();
 
+    auto logger = spdlog::get("logger");
+
+    logger->info("Log");
+
     spdlog::info("Starting...");
 
     auto app = Gtk::Application::create("org.gtkmm.button");
@@ -59,21 +63,20 @@ void spdLog_init(void)
 
     // Roll over every day at 23:59:00
     auto fileSink =
-        std::make_shared <spdlog::sinks::daily_file_sink_mt>("logs/daily.txt",
+        std::make_shared <spdlog::sinks::daily_file_sink_st>("logs/daily.txt",
                                                              23,
                                                              59);
 
-    spdlog::logger logger("log",
-                              {
-                              consoleLogger,
-                              fileSink
-                              });
+    spdlog::logger log("logger",
+                           {
+                           consoleLogger,
+                           fileSink
+                           });
 
-
-    logger.info("spdlog version {}.{}.{}",
-                SPDLOG_VER_MAJOR,
-                SPDLOG_VER_MINOR,
-                SPDLOG_VER_PATCH);
+    log.info("spdlog version {}.{}.{}",
+             SPDLOG_VER_MAJOR,
+             SPDLOG_VER_MINOR,
+             SPDLOG_VER_PATCH);
 
     spdlog::set_default_logger(std::make_shared <spdlog::logger>("log",
                                                                  spdlog::sinks_init_list(
@@ -81,6 +84,8 @@ void spdLog_init(void)
                                                                          consoleLogger,
                                                                          fileSink
                                                                      })));
+
+    spdlog::register_logger(std::make_shared <spdlog::logger>(log));
 
     /* Log levels at startup
      * The environment variable SPDLOG_LEVEL can be used to modify the log level
