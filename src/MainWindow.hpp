@@ -44,12 +44,18 @@ protected:
     void abortButton_clicked(void);
 
 private:
+//******************************************************************************************
+//                                      Constants
+//******************************************************************************************
     //! The amount by which the progress bar should be updated
     constexpr static float PROGRESS_UPDATE_FRACTION = 0.001f;
 
     //! The interval at which the progress bars should be updated
     constexpr static uint16_t PROGRESS_UPDATE_TIME_ms = 10;
 
+//******************************************************************************************
+//                                   Member variables
+//******************************************************************************************
     Gtk::Button m_ConnectButton;
     Gtk::Button m_AbortButton;
 
@@ -67,6 +73,12 @@ private:
     Gtk::TextView m_TextView;
 
     Glib::RefPtr<Gtk::TextBuffer> m_refTextBuffer;
+
+//******************************************************************************************
+//                                   Member functions
+//******************************************************************************************
+    void attachWidgets(void);
+    void connectSignals(void);
 };
 
 #endif /* SRC_MAINWINDOW_HPP_ */
