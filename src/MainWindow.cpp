@@ -34,18 +34,17 @@
 CMainWindow::CMainWindow() :
     m_ConnectButton("Connect"),
     m_AbortButton("Abort"),
-    m_isConnected("Is connected")
+    m_isConnected("Is connected"),
+    m_refTextBuffer(Gtk::TextBuffer::create())
 {
     set_title("Buttons");
 
     add(m_MainGrid);
 
     m_TextView.set_editable(false);
-    m_refTextBuffer = Gtk::TextBuffer::create();
 
     m_isConnected.set_sensitive(false);
-
-    m_ScrolledWindow.add(m_TextView);
+    m_spinner.set_sensitive(false);
 
     m_AbortButton.set_vexpand(false);
     m_ConnectButton.set_vexpand(false);
@@ -65,10 +64,46 @@ CMainWindow::CMainWindow() :
     m_AbortButton.signal_clicked().connect(sigc::mem_fun(*this,
                                                          &CMainWindow::abortButton_clicked));
 
-    auto timeout =
-        Glib::signal_timeout().connect(sigc::mem_fun(*this,
-                                                     &CMainWindow::updateProgressbar),
-                                       PROGRESS_UPDATE_TIME_ms);
+    auto updateProgressBar =
+        [this, dProgress = 0.0, uiCounter = 0]() mutable -> bool
+        {
+            static constexpr uint16_t PULSE_PRESCALE_COUNTER = 7;
+            static constexpr uint8_t PROGRESS_BAR_PRECISION = 2;
+
+            if (uiCounter++
+                > PULSE_PRESCALE_COUNTER)
+            {
+                uiCounter = 0;
+                m_PulseBar.pulse();
+            }
+
+            if (dProgress
+                > 1)
+            {
+                return true;
+            }
+
+            if (false
+                == m_isConnected.get_active())
+            {
+                return true;
+            }
+
+            dProgress += (double)PROGRESS_UPDATE_FRACTION;
+
+            m_Progressbar.set_fraction(dProgress);
+
+            spdlog::trace("Updating progress bar: {:.{}f}%",
+                dProgress
+                * 100,
+                PROGRESS_BAR_PRECISION);
+            return true;
+        };
+
+    auto timeout = Glib::signal_timeout().connect(updateProgressBar,
+                                                  PROGRESS_UPDATE_TIME_ms);
+
+    m_ScrolledWindow.add(m_TextView);
 
     m_MainGrid.attach(m_ConnectButton,
                       0,
@@ -145,46 +180,4 @@ void CMainWindow::abortButton_clicked(void)
 {
     spdlog::info("Aborting...");
     hide();
-}
-
-//+-------------------------------------------------------------------------------- Method -
-//|Author               : nandanv
-//|Created On           : 04-Apr-2021, 12:07:28 AM
-//|Description          : <see declaration>
-//+-----------------------------------------------------------------------------------------
-bool CMainWindow::updateProgressbar(void)
-{
-    static double dProgress = 0;
-    static uint16_t uiCounter = 0;
-    static constexpr uint16_t PULSE_PRESCALE_COUNTER = 7;
-    static constexpr uint8_t PROGRESS_BAR_PRECISION = 2;
-
-    if (uiCounter++
-        > PULSE_PRESCALE_COUNTER)
-    {
-        uiCounter = 0;
-        m_PulseBar.pulse();
-    }
-
-    if (dProgress
-        > 1)
-    {
-        return true;
-    }
-
-    if (false
-        == m_isConnected.get_active())
-    {
-        return true;
-    }
-
-    dProgress += (double)PROGRESS_UPDATE_FRACTION;
-
-    m_Progressbar.set_fraction(dProgress);
-
-    spdlog::trace("Updating progress bar: {:.{}f}%",
-                  dProgress
-                  * 100,
-                  PROGRESS_BAR_PRECISION);
-    return true;
 }

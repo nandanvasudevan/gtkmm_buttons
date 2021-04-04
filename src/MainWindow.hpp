@@ -36,11 +36,18 @@ public:
     virtual ~CMainWindow();
 
 protected:
+
+    //! Handles click events for the connect/disconnect button
     void connectButton_clicked(void);
+
+    //! Handles click events for the abort button
     void abortButton_clicked(void);
 
 private:
+    //! The amount by which the progress bar should be updated
     constexpr static float PROGRESS_UPDATE_FRACTION = 0.001f;
+
+    //! The interval at which the progress bars should be updated
     constexpr static uint16_t PROGRESS_UPDATE_TIME_ms = 10;
 
     Gtk::Button m_ConnectButton;
@@ -60,8 +67,6 @@ private:
     Gtk::TextView m_TextView;
 
     Glib::RefPtr<Gtk::TextBuffer> m_refTextBuffer;
-
-    bool updateProgressbar(void);
 };
 
 #endif /* SRC_MAINWINDOW_HPP_ */
